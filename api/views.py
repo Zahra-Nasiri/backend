@@ -1,13 +1,23 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from base.models import Event
-from .serializers import EventSerializer
+from base.models import Event, Registrant
+from .serializers import EventSerializer, RegistrantSerializer
 from rest_framework.permissions import IsAdminUser
 
+# Api for Event
 @api_view(['GET'])
 def getRoutes(request):
     routes = [
-        {'GET': '/api/events'}
+        {'GET': 'api/events'},
+        {'GET': 'api/events/id'},
+        {'POST': 'api/create-events'},
+        {'PUT': 'api/update-events/id'},
+        {'DELETE': 'api/delete-events/id'},
+        {'GET': 'api/registrants'},
+        {'DELETE': 'api/delete-registrants/id'},
+        # Registering for a specific event (id is for event)
+        {'POST': '/api/create-registrants/id'}
+
     ]
     return Response(routes)
 
@@ -66,12 +76,37 @@ def editEvent(request,pk):
     return Response(serializer.data)
 
 
+# Api for registrant
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def getRegistrans(request):
+    registrants = Registrant.objects.all()
+    serializer = RegistrantSerializer(registrants, many=True)
+    return Response(serializer.data)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def deleteRegistrant(request,pk):
+    registrant = Registrant.objects.get(id=pk)
+    registrant.delete()
+    return Response('Registrant Deleted Successfully')
 
 
-
-
+@api_view(['POST'])
+def createRegistrant(request,pk):
+    data = request.data
+    event = Event.objects.get(id=pk)
+    registrant = Registrant.objects.create(
+        event = event,
+        first_name = data['first_name'],
+        last_name = data['last_name'],
+        student_id = data['student_id'],
+        phone_number = data['phone_number'],
+        university = data['university']
+    )
+    serializer = RegistrantSerializer(registrant, many=False)
+    return Response(serializer.data)
 
 
 
