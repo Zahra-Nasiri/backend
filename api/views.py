@@ -89,6 +89,9 @@ def getRegistrans(request):
 @permission_classes([IsAdminUser])
 def deleteRegistrant(request,pk):
     registrant = Registrant.objects.get(id=pk)
+    event = registrant.event 
+    event.enrolled = event.enrolled - 1
+    event.save()
     registrant.delete()
     return Response('Registrant Deleted Successfully')
 
@@ -105,6 +108,8 @@ def createRegistrant(request,pk):
         phone_number = data['phone_number'],
         university = data['university']
     )
+    event.enrolled = event.enrolled + 1
+    event.save()
     serializer = RegistrantSerializer(registrant, many=False)
     return Response(serializer.data)
 
